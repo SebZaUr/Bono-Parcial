@@ -44,7 +44,11 @@ public class CalcReflexFachada {
             }
             URI reqURL = getRequestURI(firstLine);
             if(reqURL.getPath().startsWith("/computar")){
-                outputLine = HttpConnection.getResponse("/compreflex?" + reqURL.getQuery());
+                String answer = HttpConnection.getResponse("/compreflex?" + reqURL.getQuery());
+                outputLine = outputLine = "HTTP/1.1 200 OK\r\n"
+                        + "Content-Type: application/json\r\n"
+                        + "\r\n"
+                        + answer;
             }else{
                 outputLine = getHttpClient();
             }
@@ -84,7 +88,7 @@ public class CalcReflexFachada {
                 + "                    document.getElementById(\"getrespmsg\").innerHTML =\n"
                 + "                    this.responseText;\n"
                 + "                }\n"
-                + "                xhttp.open(\"GET\", \"/computar?comando=\"+nameVar);\n"
+                + "                xhttp.open(\"GET\", \"/computar?name=\"+nameVar);\n"
                 + "                xhttp.send();\n"
                 + "            }\n"
                 + "        </script>\n"

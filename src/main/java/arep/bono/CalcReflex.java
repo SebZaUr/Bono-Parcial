@@ -8,7 +8,7 @@ import static arep.bono.CalcReflexFachada.getHttpClient;
 import static arep.bono.CalcReflexFachada.getRequestURI;
 
 public class CalcReflex {
-    public static void main(String[] args) throws IOException, URISyntaxException {
+    public static void main(String[] args) throws IOException, URISyntaxException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         ServerSocket serverSocket = null;
         try {
             serverSocket = new ServerSocket(36000);
@@ -44,8 +44,15 @@ public class CalcReflex {
                 }
             }
             URI reqURL = getRequestURI(firstLine);
-            if(reqURL.getPath().startsWith("/computar")){
-                outputLine = HttpConnection.getResponse("/compreflex?" + reqURL.getQuery());
+            if(reqURL.getPath().startsWith("/compreflex")){
+                String method = reqURL.toString().split("\\?")[1];
+                String command = method.split("\\(")[0];
+                String[] values = method.split("\\)")[0].split(",");
+                String answer = computeMathCommand(command,values);
+                outputLine = "HTTP/1.1 200 OK\r\n"
+                        + "Content-Type: application/json\r\n"
+                        + "\r\n"
+                        + answer;
             }else{
                 outputLine = getHttpClient();
             }
@@ -78,12 +85,37 @@ public class CalcReflex {
         return new URI(rurl);
     }
 
-    public static String computeMathCommand(String command) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public static String computeMathCommand(String command,String[] values) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Class c = Math.class;
         Class[] parametersTypes = {double.class,};
-        Method listmethod = c.getDeclaredMethod("abs", parametersTypes);
-        Object[] params = {-2.0};
+        Object[] params = new Double[values.length];
+        for(int i = 0; i<values.length; i++){
+            params[i] = Double.parseDouble(values[i]);
+        }
+        Method listmethod = c.getDeclaredMethod(command, parametersTypes);
         String resp = listmethod.invoke(null,(Object) params).toString();
-        return "";
+        return resp;
+    }
+
+    private static double[] bbl(double[] operators){
+        while(!isInOrder(operators)){
+            for(int i=0; i< operators.length -1; i++){
+                if(operators[i] > operators[i+1]){
+                    double min = operators[i+1];
+                    double max = operators[i];
+                    operators[i] = min;
+                    operators[i+1] = max;
+                }
+            }
+        }
+        return operators;
+    }
+    private static boolean isInOrder(double[] list){
+        for(int i =0; i<list.length-1;i++){
+            if(list[i] > list[i+1]){
+                return false;
+            }
+        }
+        return true;
     }
 }

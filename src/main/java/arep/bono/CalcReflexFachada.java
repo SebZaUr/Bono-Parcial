@@ -49,8 +49,23 @@ public class CalcReflexFachada {
                         + "Content-Type: application/json\r\n"
                         + "\r\n"
                         + answer;
-            }else{
+            }else if(reqURL.getPath().startsWith("/calcular")){
                 outputLine = getHttpClient();
+            }else{
+                outputLine = "HTTP/1.1 200 OK\r\n" +
+                        "Content-Type: text/html\r\n" +
+                        "\r\n" +
+                        "<!DOCTYPE html>\n" +
+                        "<html>\n" +
+                        "    <head>\n" +
+                        "        <title>Form Example</title>\n" +
+                        "        <meta charset=\"UTF-8\">\n" +
+                        "        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
+                        "    </head>\n" +
+                        "    <body>\n" +
+                        "        <h1>Method Not Found</h1>\n" +
+                        "    </body>\n"+
+                        "</html>";
             }
             out.println(outputLine);
             out.close();
@@ -72,9 +87,9 @@ public class CalcReflexFachada {
                 + "        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
                 + "    </head>\n"
                 + "    <body>\n"
-                + "        <h1>Form with GET</h1>\n"
-                + "        <form action=\"/hello\">\n"
-                + "            <label for=\"name\">Name:</label><br>\n"
+                + "        <h1>Calculadora</h1>\n"
+                + "        <form action=\"/computar\">\n"
+                + "            <label for=\"name\">Comando:</label><br>\n"
                 + "            <input type=\"text\" id=\"comando\" name=\"comando\" value=\"max(1.0,2.0)\"><br><br>\n"
                 + "            <input type=\"button\" value=\"Submit\" onclick=\"loadGetMsg()\">\n"
                 + "        </form> \n"

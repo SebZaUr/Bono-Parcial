@@ -3,9 +3,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.*;
 import java.io.*;
-
-import static arep.bono.CalcReflexFachada.getHttpClient;
-import static arep.bono.CalcReflexFachada.getRequestURI;
+import java.util.Objects;
 
 public class CalcReflex {
     public static void main(String[] args) throws IOException, URISyntaxException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
@@ -46,9 +44,15 @@ public class CalcReflex {
             URI reqURL = getRequestURI(firstLine);
             if(reqURL.getPath().startsWith("/compreflex")){
                 String method = reqURL.toString().split("\\?")[1];
-                String command = method.split("\\(")[0];
-                String[] values = method.split("\\)")[0].split(",");
-                String answer = computeMathCommand(command,values);
+                String command = method.split("\\(")[0].split("=")[1];
+                String[] values = method.split("\\)")[0].split("\\(")[1].split(",");
+                String answer ;
+                if(Objects.equals(command, "bbl")){
+                    Double[] params = convertDoubles(values);
+                    answer = bbl(params);
+                }  else{
+                    answer = computeMathCommand(command,values);
+                }
                 outputLine = "HTTP/1.1 200 OK\r\n"
                         + "Content-Type: application/json\r\n"
                         + "\r\n"
@@ -85,19 +89,23 @@ public class CalcReflex {
         return new URI(rurl);
     }
 
-    public static String computeMathCommand(String command,String[] values) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Class c = Math.class;
-        Class[] parametersTypes = {double.class,};
-        Object[] params = new Double[values.length];
-        for(int i = 0; i<values.length; i++){
-            params[i] = Double.parseDouble(values[i]);
+    public static String computeMathCommand(String command, String[] values) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Class<?> c = Math.class;
+        Method listMethod;
+        Double[] params = convertDoubles(values);
+        if(params.length == 1){
+            listMethod = c.getDeclaredMethod(command, double.class);
+            return listMethod.invoke(null, params[0]).toString();
+        }else if (params.length == 2) {
+            listMethod = c.getDeclaredMethod(command, double.class, double.class);
+            return listMethod.invoke(null, params[0], params[1]).toString();
+        } else {
+            throw new IllegalArgumentException("El método max requiere exactamente 2 parámetros.");
         }
-        Method listmethod = c.getDeclaredMethod(command, parametersTypes);
-        String resp = listmethod.invoke(null,(Object) params).toString();
-        return resp;
     }
 
-    private static double[] bbl(double[] operators){
+
+    private static String bbl(Double[] operators){
         while(!isInOrder(operators)){
             for(int i=0; i< operators.length -1; i++){
                 if(operators[i] > operators[i+1]){
@@ -108,14 +116,26 @@ public class CalcReflex {
                 }
             }
         }
-        return operators;
+        String answer = "List: ";
+        for(int i=0; i< operators.length-1;i++){
+            answer += operators[i].toString() +"-";
+        }
+        return answer+operators[operators.length-1].toString();
     }
-    private static boolean isInOrder(double[] list){
+    private static boolean isInOrder(Double[] list){
         for(int i =0; i<list.length-1;i++){
             if(list[i] > list[i+1]){
                 return false;
             }
         }
         return true;
+    }
+
+    private static Double[] convertDoubles(String[] values){
+        Double[] params = new Double[values.length];
+        for (int i = 0; i < values.length; i++) {
+            params[i] = Double.parseDouble(values[i]);
+        }
+        return params;
     }
 }

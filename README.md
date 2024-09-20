@@ -89,7 +89,7 @@ Probamos nuestras calculadora para los siguientes casos:
   ![Dos parametros Prueba](./src/resources/testDosParametros.png)
 * __BBL:__
 
-  ![BBL Prueba](./src/resources/testBBl.png)
+  ![BBL Prueba](./src/resources/testBbl.png)
 ---
 
 ## Licencia
